@@ -31,3 +31,7 @@ poetry.lock
 
 memstat.c
 memstat.*
+
+# Zig build artifacts
+zig-cache/
+zig-out/
