@@ -89,12 +89,12 @@ const VersionParts = struct {
 fn renderHeader(b: *std.Build) ![]u8 {
 	const allocator = b.allocator;
 
-	const version_raw = try std.fs.cwd().readFileAlloc(allocator, "VERSION", 256);
+	const version_raw = try std.fs.cwd().readFileAlloc(allocator, b.pathFromRoot("VERSION"), 256);
 	defer allocator.free(version_raw);
 	const version = std.mem.trim(u8, version_raw, " \t\r\n");
 	const version_parts = parseVersion(version);
 
-	const template = try std.fs.cwd().readFileAlloc(allocator, "sqlite-vec.h.tmpl", 64 * 1024);
+	const template = try std.fs.cwd().readFileAlloc(allocator, b.pathFromRoot("sqlite-vec.h.tmpl"), 64 * 1024);
 	defer allocator.free(template);
 
 	const date = "1970-01-01T00:00:00Z+0000";
