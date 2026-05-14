@@ -14,6 +14,7 @@ pub fn build(b: *std.Build) void {
 	const sqlite3_module = b.createModule(.{
 		.target = target,
 		.optimize = optimize,
+		.link_libc = true,
 	});
 	const sqlite3_lib = b.addLibrary(.{
 		.name = "sqlite3",
@@ -25,7 +26,6 @@ pub fn build(b: *std.Build) void {
 		.flags = &.{"-DSQLITE_ENABLE_FTS5"},
 	});
 	sqlite3_module.addIncludePath(amalgamation_dir);
-	sqlite3_lib.linkLibC();
 	sqlite3_lib.installHeader(amalgamation_dir.path(b, "sqlite3.h"), "sqlite3.h");
 	sqlite3_lib.installHeader(amalgamation_dir.path(b, "sqlite3ext.h"), "sqlite3ext.h");
 	b.installArtifact(sqlite3_lib);
@@ -33,6 +33,7 @@ pub fn build(b: *std.Build) void {
 	const vec_static_module = b.createModule(.{
 		.target = target,
 		.optimize = optimize,
+		.link_libc = true,
 	});
 	const vec_static = b.addLibrary(.{
 		.name = "sqlite_vec0",
@@ -41,17 +42,17 @@ pub fn build(b: *std.Build) void {
 	});
 	vec_static_module.addCSourceFile(.{
 		.file = b.path("sqlite-vec.c"),
-		.flags = &.{"-DSQLITE_CORE", "-DSQLITE_VEC_STATIC"},
+		.flags = &.{ "-DSQLITE_CORE", "-DSQLITE_VEC_STATIC" },
 	});
 	vec_static_module.addIncludePath(amalgamation_dir);
 	vec_static_module.addIncludePath(header_dir);
-	vec_static.linkLibC();
 	vec_static.installHeader(header_path, "sqlite-vec.h");
 	b.installArtifact(vec_static);
 
 	const vec_shared_module = b.createModule(.{
 		.target = target,
 		.optimize = optimize,
+		.link_libc = true,
 	});
 	const vec_shared = b.addLibrary(.{
 		.name = "vec0",
@@ -63,17 +64,17 @@ pub fn build(b: *std.Build) void {
 	});
 	vec_shared_module.addIncludePath(amalgamation_dir);
 	vec_shared_module.addIncludePath(header_dir);
-	vec_shared.linkLibC();
 	vec_shared.installHeader(header_path, "sqlite-vec.h");
 	b.installArtifact(vec_shared);
 }
 
 fn getAmalgamationDir(b: *std.Build) std.Build.LazyPath {
-	if (std.process.getEnvVarOwned(b.allocator, "SQLITE_VEC_SQLITE_AMALGAMATION_DIR")) |path| {
-		return .{ .cwd_relative = path };
-	} else |_| {}
+	if (b.graph.environ_map.get("SQLITE_VEC_SQLITE_AMALGAMATION_DIR")) |path| {
+		return .{ .cwd_relative = b.dupe(path) };
+	}
 
-	if (std.fs.cwd().access("vendor/sqlite3.c", .{})) |_| {
+	const cwd = std.Io.Dir.cwd();
+	if (cwd.access(b.graph.io, "vendor/sqlite3.c", .{})) |_| {
 		return b.path("vendor");
 	} else |_| {}
 
@@ -88,13 +89,15 @@ const VersionParts = struct {
 
 fn renderHeader(b: *std.Build) ![]u8 {
 	const allocator = b.allocator;
+	const io = b.graph.io;
+	const cwd = std.Io.Dir.cwd();
 
-	const version_raw = try std.fs.cwd().readFileAlloc(allocator, b.pathFromRoot("VERSION"), 256);
+	const version_raw = try cwd.readFileAlloc(io, b.pathFromRoot("VERSION"), allocator, .limited(256));
 	defer allocator.free(version_raw);
 	const version = std.mem.trim(u8, version_raw, " \t\r\n");
 	const version_parts = parseVersion(version);
 
-	const template = try std.fs.cwd().readFileAlloc(allocator, b.pathFromRoot("sqlite-vec.h.tmpl"), 64 * 1024);
+	const template = try cwd.readFileAlloc(io, b.pathFromRoot("sqlite-vec.h.tmpl"), allocator, .limited(64 * 1024));
 	defer allocator.free(template);
 
 	const date = "1970-01-01T00:00:00Z+0000";
