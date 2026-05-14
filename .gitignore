@@ -35,3 +35,7 @@ memstat.*
 # Zig build artifacts
 zig-cache/
 zig-out/
+
+# macOS noise
+.DS_Store
+
