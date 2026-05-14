@@ -39,3 +39,4 @@ zig-out/
 # macOS noise
 .DS_Store
 
+.direnv/
