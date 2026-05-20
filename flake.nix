@@ -23,6 +23,23 @@
 				};
 			in {
 				packages.sqlite-amalgamation = sqlite-amalgamation;
+
+				packages.default = pkgs.stdenv.mkDerivation {
+					pname = "sqlite-vec";
+					version = builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./VERSION);
+					src = ./.;
+					nativeBuildInputs = [ zigPkg ];
+					dontConfigure = true;
+					buildPhase = ''
+						export HOME=$TMPDIR
+						export ZIG_GLOBAL_CACHE_DIR=$TMPDIR/zig-cache
+						export SQLITE_VEC_SQLITE_AMALGAMATION_DIR=${sqlite-amalgamation}
+						mkdir -p "$ZIG_GLOBAL_CACHE_DIR"
+						zig build -Doptimize=ReleaseFast --prefix $out
+					'';
+					installPhase = "true"; # build.zig installs lib + headers to $out
+				};
+
 				devShells.default = pkgs.mkShell {
 					packages = [
 						zigPkg
