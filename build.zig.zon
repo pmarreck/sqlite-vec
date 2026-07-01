@@ -1,6 +1,6 @@
 .{
 	.name = .sqlite_vec,
-	.version = "0.1.7-alpha.2",
+	.version = "0.1.10-alpha.4",
 	.minimum_zig_version = "0.16.0",
 	.paths = .{
 		"build.zig",
