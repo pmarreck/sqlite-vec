@@ -42,7 +42,7 @@ pub fn build(b: *std.Build) void {
 	});
 	vec_static_module.addCSourceFile(.{
 		.file = b.path("sqlite-vec.c"),
-		.flags = &.{ "-DSQLITE_CORE", "-DSQLITE_VEC_STATIC" },
+		.flags = &.{ "-DSQLITE_CORE", "-DSQLITE_VEC_STATIC", "-DSQLITE_VEC_ENABLE_DISKANN=0", "-DSQLITE_VEC_ENABLE_RESCORE=0" },
 	});
 	vec_static_module.addIncludePath(amalgamation_dir);
 	vec_static_module.addIncludePath(header_dir);
@@ -61,6 +61,7 @@ pub fn build(b: *std.Build) void {
 	});
 	vec_shared_module.addCSourceFile(.{
 		.file = b.path("sqlite-vec.c"),
+		.flags = &.{ "-DSQLITE_VEC_ENABLE_DISKANN=0", "-DSQLITE_VEC_ENABLE_RESCORE=0" },
 	});
 	vec_shared_module.addIncludePath(amalgamation_dir);
 	vec_shared_module.addIncludePath(header_dir);
